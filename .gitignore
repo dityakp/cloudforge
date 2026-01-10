@@ -1,0 +1,38 @@
+# Created by venv; see https://docs.python.org/3/library/venv.html
+# =========================
+# Node / Next.js
+# =========================
+node_modules/
+.next/
+out/
+npm-debug.log*
+yarn-error.log*
+pnpm-lock.yaml
+
+# =========================
+# Python
+# =========================
+__pycache__/
+*.pyc
+.venv/
+env/
+
+# =========================
+# Environment files
+# =========================
+.env
+.env.*
+
+# =========================
+# Terraform
+# =========================
+.terraform/
+*.tfstate
+*.tfstate.backup
+
+# =========================
+# OS / Editor
+# =========================
+.vscode/
+.DS_Store
+Thumbs.db
