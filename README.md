@@ -1,125 +1,107 @@
-# DevOps Assignment
+# CloudForge - DevOps Assignment
 
-This project consists of a FastAPI backend and a Next.js frontend that communicates with the backend.
+Welcome to **CloudForge**, a robust, containerized two-tier web application (FastAPI + Next.js) deployed on AWS using modern DevOps practices.
 
-## Project Structure
+This repository demonstrates a production-grade workflow including **Infrastructure as Code (Terraform)**, **CI/CD Automation (GitHub Actions)**, **Docker Best Practices**, and **Cloud Monitoring**.
 
-```
-.
-├── backend/               # FastAPI backend
-│   ├── app/
-│   │   └── main.py       # Main FastAPI application
-│   └── requirements.txt    # Python dependencies
-└── frontend/              # Next.js frontend
-    ├── pages/
-    │   └── index.js     # Main page
-    ├── public/            # Static files
-    └── package.json       # Node.js dependencies
-```
+---
 
-## Prerequisites
+## 🏗️ Architecture
 
-- Python 3.8+
-- Node.js 16+
-- npm or yarn
+The application runs on AWS Fargate (Serverless Containers) for maximum scalability and minimal management overhead.
 
-## Backend Setup
+*   **Frontend**: Next.js (Port 3000)
+*   **Backend**: FastAPI (Port 8000)
+*   **Infrastructure**:
+    *   **VPC**: Custom VPC with 2 Public Subnets across 2 Availability Zones (High Availability).
+    *   **Load Balancer**: Internet-facing Application Load Balancer (ALB) routing traffic based on path (`/api/*` -> Backend, `/*` -> Frontend).
+    *   **Compute**: ECS Cluster running Fargate tasks.
+    *   **Storage**: ECR for Docker images, S3 + DynamoDB for Terraform State.
+    *   **Monitoring**: CloudWatch Log Groups & CPU Alarms (>70%) with SNS alerts.
 
-1. Navigate to the backend directory:
-   ```bash
-   cd backend
-   ```
+---
 
-2. Create a virtual environment (recommended):
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: .\venv\Scripts\activate
-   ```
+## 🚀 Workflows (How it Works)
 
-3. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
+We use **GitHub Actions** to automate everything. There are two main workflows:
 
-4. Run the FastAPI server:
-   ```bash
-   uvicorn app.main:app --reload --port 8000
-   ```
+### 1. Continuous Integration (`ci-develop.yml`)
+*   **Trigger**: Push to `develop` branch (or pull requests).
+*   **Actions**:
+    1.  **Tests**: Runs `pytest` (Backend) and `npm test` (Frontend).
+    2.  **Infrastructure Check**: Runs `terraform apply` to ensure the ECR repositories exist.
+    3.  **Build & Push**: Builds Docker images and pushes them to ECR with `latest` and `dityakp/feature/dockerization` tags.
+    *   **Result**: Validates code quality and prepares artifacts.
 
-   The backend will be available at `http://localhost:8000`
+### 2. Continuous Deployment (`cd-main.yml`)
+*   **Trigger**: Push to `main` branch.
+*   **Actions**:
+    1.  **Infrastructure Sync**: Runs `terraform apply` (using Remote State) to provision/update VPC, ALB, and ECS.
+    2.  **Deployment**: Pushes new images to ECR and forces an ECS Service update.
+    3.  **Rolling Update**: ECS drains old tasks and spins up new ones with zero downtime.
+    *   **Result**: Live application updated at the ALB URL.
 
-## Frontend Setup
+### 3. Destruction (`destroy-infra.yml`)
+*   **Trigger**: Manual (GitHub Actions > Run Workflow).
+*   **Action**: Runs `terraform destroy` to tear down all AWS resources and save costs.
 
-1. Navigate to the frontend directory:
-   ```bash
-   cd frontend
-   ```
+---
 
-2. Install dependencies:
-   ```bash
-   npm install
-   # or
-   yarn
-   ```
+## 🛠️ How to Run Locally
 
-3. Configure the backend URL (if different from default):
-   - Open `.env.local`
-   - Update `NEXT_PUBLIC_API_URL` with your backend URL
-   - Example: `NEXT_PUBLIC_API_URL=https://your-backend-url.com`
+You can run the full stack locally using Docker Compose.
 
-4. Run the development server:
-   ```bash
-   npm run dev
-   # or
-   yarn dev
-   ```
+1.  **Clone the repo**:
+    ```bash
+    git clone https://github.com/dityakp/cloudforge.git
+    cd cloudforge
+    ```
 
-   The frontend will be available at `http://localhost:3000`
+2.  **Start Services**:
+    ```bash
+    docker-compose up --build
+    ```
 
-## Changing the Backend URL
+3.  **Access App**:
+    *   Frontend: `http://localhost:3000`
+    *   Backend API: `http://localhost:8000/api/health`
 
-To change the backend URL that the frontend connects to:
+---
 
-1. Open the `.env.local` file in the frontend directory
-2. Update the `NEXT_PUBLIC_API_URL` variable with your new backend URL
-3. Save the file
-4. Restart the Next.js development server for changes to take effect
+## ☁️ Infrastructure as Code (Terraform)
 
-Example:
-```
-NEXT_PUBLIC_API_URL=https://your-new-backend-url.com
-```
+All infrastructure is defined in the `terraform/` directory.
 
-## For deployment:
-   ```bash
-   npm run build
-   # or
-   yarn build
-   ```
+**State Management**:
+We use a **Remote Backend** (S3 + DynamoDB) to store the state file. This allows GitHub Actions and local developers to share the same infrastructure state without conflicts.
+*   **Bucket**: `cloudforge-tf-state-164971840296`
+*   **Lock Table**: `cloudforge-tf-locks`
 
-   AND
+**Key Files**:
+*   `main.tf`: VPC, Subnets, Security Groups.
+*   `ecs.tf`: Cluster, Services, Task Definitions.
+*   `alb.tf`: Load Balancer and Target Groups.
+*   `monitoring.tf`: CloudWatch Alarms.
 
-   ```bash
-   npm run start
-   # or
-   yarn start
-   ```
+---
 
-   The frontend will be available at `http://localhost:3000`
+## ✅ Deployment Checklist
 
-## Testing the Integration
+To deploy changes:
+1.  **Feature Branch**: Make changes in `feature/dockerization` (or your feature branch).
+2.  **Merge to Develop**: This triggers the **CI** pipeline (Test + Build).
+3.  **Merge to Main**: This triggers the **CD** pipeline (Deploy to AWS).
 
-1. Ensure both backend and frontend servers are running
-2. Open the frontend in your browser (default: http://localhost:3000)
-3. If everything is working correctly, you should see:
-   - A status message indicating the backend is connected
-   - The message from the backend: "You've successfully integrated the backend!"
-   - The current backend URL being used
+**Live URL**: `http://cloudforge-alb-956666774.ap-south-1.elb.amazonaws.com`
 
-## API Endpoints
+---
 
-- `GET /api/health`: Health check endpoint
-  - Returns: `{"status": "healthy", "message": "Backend is running successfully"}`
+## 🛡️ Security & Best Practices used
+*   **Docker**: Multi-stage builds and **non-root users** (`appuser`) for security.
+*   **IAM**: Least Privilege execution roles for ECS tasks.
+*   **Networking**: Security Groups strictly limit traffic (ALB -> ECS only).
+*   **Secrets**: AWS Credentials stored in GitHub Secrets.
 
-- `GET /api/message`: Get the integration message
-  - Returns: `{"message": "You've successfully integrated the backend!"}`
+---
+
+*Verified by [Aditya Kumar Prasad](https://github.com/dityakp)*
