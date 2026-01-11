@@ -1,0 +1,42 @@
+name: CD - Deploy to AWS ECS
+
+on:
+  push:
+    branches: [main]
+
+env:
+  AWS_REGION: ap-south-1
+  AWS_ACCOUNT_ID: 164971840296
+  IMAGE_TAG: ${{ github.sha }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ---------- AWS Auth ----------
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # ---------- Deploy Backend ----------
+      - name: Deploy Backend to ECS
+        run: |
+          aws ecs update-service \
+            --cluster cloudforge-cluster \
+            --service cloudforge-backend \
+            --force-new-deployment
+
+      # ---------- Deploy Frontend ----------
+      - name: Deploy Frontend to ECS
+        run: |
+          aws ecs update-service \
+            --cluster cloudforge-cluster \
+            --service cloudforge-frontend \
+            --force-new-deployment
