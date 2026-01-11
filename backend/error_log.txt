@@ -1,0 +1,27 @@
+============================= test session starts =============================
+platform win32 -- Python 3.11.9, pytest-9.0.2, pluggy-1.6.0
+rootdir: C:\Victus-D\Project\cloudforge\backend
+configfile: pytest.ini
+plugins: anyio-3.7.1
+collected 0 items / 2 errors
+
+=================================== ERRORS ====================================
+____________________ ERROR collecting tests/test_health.py ____________________
+tests\test_health.py:4: in <module>
+    client = TestClient(app)
+             ^^^^^^^^^^^^^^^
+venv\Lib\site-packages\starlette\testclient.py:399: in __init__
+    super().__init__(
+E   TypeError: Client.__init__() got an unexpected keyword argument 'app'
+___________________ ERROR collecting tests/test_message.py ____________________
+tests\test_message.py:4: in <module>
+    client = TestClient(app)
+             ^^^^^^^^^^^^^^^
+venv\Lib\site-packages\starlette\testclient.py:399: in __init__
+    super().__init__(
+E   TypeError: Client.__init__() got an unexpected keyword argument 'app'
+=========================== short test summary info ===========================
+ERROR tests/test_health.py - TypeError: Client.__init__() got an unexpected k...
+ERROR tests/test_message.py - TypeError: Client.__init__() got an unexpected ...
+!!!!!!!!!!!!!!!!!!! Interrupted: 2 errors during collection !!!!!!!!!!!!!!!!!!!
+============================== 2 errors in 0.72s ==============================
