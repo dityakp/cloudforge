@@ -1,0 +1,81 @@
+name: CI - Test, Build & Push to ECR
+
+on:
+  push:
+    branches: [develop]
+
+env:
+  AWS_REGION: ap-south-1
+  AWS_ACCOUNT_ID: 164971840296
+  IMAGE_TAG: ${{ github.sha }}
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      # ---------- Checkout ----------
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ---------- Backend Tests ----------
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: |
+          pip install -r requirements.txt
+
+      - name: Run backend tests
+        working-directory: backend
+        run: pytest
+
+      # ---------- Frontend Tests ----------
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm install
+
+      - name: Run frontend tests
+        working-directory: frontend
+        run: npm test -- --watch=false
+
+      # ---------- AWS Auth ----------
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # ---------- Build & Push Backend ----------
+      - name: Build & Push Backend Image
+        run: |
+          docker build -t cloudforge-backend:${IMAGE_TAG} backend
+
+          docker tag cloudforge-backend:${IMAGE_TAG} \
+          ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/cloudforge-backend:${IMAGE_TAG}
+
+          docker push \
+          ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/cloudforge-backend:${IMAGE_TAG}
+
+      # ---------- Build & Push Frontend ----------
+      - name: Build & Push Frontend Image
+        run: |
+          docker build -t cloudforge-frontend:${IMAGE_TAG} frontend
+
+          docker tag cloudforge-frontend:${IMAGE_TAG} \
+          ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/cloudforge-frontend:${IMAGE_TAG}
+
+          docker push \
+          ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/cloudforge-frontend:${IMAGE_TAG}
