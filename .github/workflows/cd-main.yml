@@ -46,8 +46,9 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: cloudforge-backend
         run: |
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:${{ env.IMAGE_TAG }} backend
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:${{ env.IMAGE_TAG }} -t $ECR_REGISTRY/$ECR_REPOSITORY:latest backend
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:${{ env.IMAGE_TAG }}
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:${{ env.IMAGE_TAG }}" >> $GITHUB_OUTPUT
 
       - name: Download Backend Task Definition
@@ -77,8 +78,9 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: cloudforge-frontend
         run: |
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:${{ env.IMAGE_TAG }} frontend
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:${{ env.IMAGE_TAG }} -t $ECR_REGISTRY/$ECR_REPOSITORY:latest frontend
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:${{ env.IMAGE_TAG }}
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:${{ env.IMAGE_TAG }}" >> $GITHUB_OUTPUT
 
       - name: Download Frontend Task Definition
