@@ -72,21 +72,29 @@ jobs:
       # ---------- Build & Push Backend ----------
       - name: Build & Push Backend Image
         run: |
-          docker build -t cloudforge-backend:${IMAGE_TAG} backend
+          docker build -t cloudforge-backend:${IMAGE_TAG} -t cloudforge-backend:latest backend
 
           docker tag cloudforge-backend:${IMAGE_TAG} \
           ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/cloudforge-backend:${IMAGE_TAG}
+          docker tag cloudforge-backend:latest \
+          ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/cloudforge-backend:latest
 
           docker push \
           ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/cloudforge-backend:${IMAGE_TAG}
+          docker push \
+          ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/cloudforge-backend:latest
 
       # ---------- Build & Push Frontend ----------
       - name: Build & Push Frontend Image
         run: |
-          docker build -t cloudforge-frontend:${IMAGE_TAG} frontend
+          docker build -t cloudforge-frontend:${IMAGE_TAG} -t cloudforge-frontend:latest frontend
 
           docker tag cloudforge-frontend:${IMAGE_TAG} \
           ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/cloudforge-frontend:${IMAGE_TAG}
+          docker tag cloudforge-frontend:latest \
+          ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/cloudforge-frontend:latest
 
           docker push \
           ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/cloudforge-frontend:${IMAGE_TAG}
+          docker push \
+          ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/cloudforge-frontend:latest
