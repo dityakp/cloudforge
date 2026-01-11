@@ -1,6 +1,9 @@
-node_modules
-.next
+node_modules/
+.next/
+out/
+.env
 .git
-.gitignore
-README.md
-dockerfile
+coverage/
+jest.config.js
+jest.setup.js
+__tests__/
